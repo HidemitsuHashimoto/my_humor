@@ -1,21 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/widgets/humor_icon.dart';
 import '../../mood_registration/entities/mood_level.dart';
-
-class HumorIcon extends StatelessWidget {
-  const HumorIcon({
-    super.key,
-    required this.text,
-  });
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(text, style: TextStyle(fontSize: 36),);
-  }
-}
-
 
 /// Five mood buttons in order (PH01): Horrível, Mal, Mais ou Menos, Bem, Ótimo.
 class MoodButtonsRow extends StatelessWidget {

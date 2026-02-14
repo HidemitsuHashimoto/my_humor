@@ -27,12 +27,28 @@ class _HomePageState extends ConsumerState<HomePage> {
     final success = await ref.read(homeControllerProvider.notifier).save();
     if (!mounted) return;
     if (success) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.relatorio);
+      Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.relatorio, (route) => false);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkIfHasEntryToday());
+  }
+
+  Future<void> _checkIfHasEntryToday() async {
+    final repository = ref.read(moodRepositoryProvider);
+    final now = DateTime.now();
+    final hasEntryToday = await repository.hasEntryForDate(now);
+    if (mounted && hasEntryToday) {
+        Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.relatorio, (route) => false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    _checkIfHasEntryToday();
     final state = ref.watch(homeControllerProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Como você está hoje?')),

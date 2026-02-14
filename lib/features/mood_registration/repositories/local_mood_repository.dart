@@ -65,6 +65,37 @@ class LocalMoodRepository implements MoodRepository {
     return entry != null;
   }
 
+  @override
+  Future<void> seedSampleDataForMonth(int year, int month) async {
+    final lastDay = DateTime(year, month + 1, 0).day;
+    final levels = MoodLevel.values;
+    for (int day = 1; day <= lastDay; day++) {
+      final date = DateTime(year, month, day);
+      final levelIndex = _sampleLevelIndex(day, lastDay);
+      final entry = MoodEntry(
+        moodLevel: levels[levelIndex],
+        observation: 'Exemplo',
+        date: _dateOnly(date),
+      );
+      await save(entry);
+    }
+  }
+
+  @override
+  Future<void> clearSampleData() async {
+    await _db.delete(MoodDatabase.tableMoodEntries);
+  }
+
+  /// Distribuição variada: mais "okay/good", menos "horrible/bad".
+  int _sampleLevelIndex(int day, int lastDay) {
+    final t = (day - 1) / (lastDay - 1).clamp(1, lastDay);
+    if (t < 0.15) return 0;
+    if (t < 0.30) return 1;
+    if (t < 0.55) return 2;
+    if (t < 0.80) return 3;
+    return 4;
+  }
+
   MoodEntry _rowToEntry(Map<String, Object?> row) {
     final id = row[MoodDatabase.columnId] as int?;
     final level = row[MoodDatabase.columnMoodLevel] as int;

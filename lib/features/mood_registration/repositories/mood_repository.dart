@@ -6,4 +6,8 @@ abstract interface class MoodRepository {
   Future<MoodEntry?> getEntryForDate(DateTime date);
   Future<List<MoodEntry>> getEntriesForMonth(int year, int month);
   Future<bool> hasEntryForDate(DateTime date);
+  /// Inserts sample entries for the given month for demo/testing.
+  Future<void> seedSampleDataForMonth(int year, int month);
+  // Clear all entries
+  Future<void> clearSampleData();
 }

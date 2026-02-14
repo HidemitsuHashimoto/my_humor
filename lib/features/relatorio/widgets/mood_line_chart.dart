@@ -9,27 +9,59 @@ class MoodLineChart extends StatelessWidget {
 
   final List<MoodEntry> entries;
 
+  static const int _lastDaysCount = 7;
+
   @override
   Widget build(BuildContext context) {
-    final spots = List<MoodEntry>.from(entries)
+    final refDate = entries.isNotEmpty
+        ? (entries.map((e) => e.date).reduce((a, b) => a.isAfter(b) ? a : b))
+        : DateTime.now();
+    final refDateOnly = DateTime(refDate.year, refDate.month, refDate.day);
+    final startDateOnly =
+        refDateOnly.subtract(const Duration(days: _lastDaysCount - 1));
+    final endExclusive = refDateOnly.add(const Duration(days: 1));
+    final spotsInRange = entries
+        .where((e) =>
+            !e.date.isBefore(startDateOnly) && e.date.isBefore(endExclusive))
+        .toList()
       ..sort((a, b) => a.date.compareTo(b.date));
-    final flSpots = spots
-        .map((e) => FlSpot(e.date.day.toDouble(), e.moodLevel.value.toDouble()))
+    final flSpots = spotsInRange
+        .map((e) => FlSpot(
+              e.date.difference(startDateOnly).inDays + 1.0,
+              e.moodLevel.value.toDouble(),
+            ))
         .toList();
-    final minX = flSpots.isEmpty ? 0.0 : flSpots.map((s) => s.x).reduce((a, b) => a < b ? a : b).floorToDouble();
-    final maxX = flSpots.isEmpty ? 31.0 : flSpots.map((s) => s.x).reduce((a, b) => a > b ? a : b).ceilToDouble();
+    const minX = 1.0;
+    final maxX = spotsInRange.isNotEmpty ? spotsInRange.map((e) => e.date.difference(startDateOnly).inDays + 1.0).reduce((a, b) => a > b ? a : b).ceilToDouble() : 1.0;
     final minY = 1.0;
     const maxY = 5.0;
     return SizedBox(
       height: 220,
       child: LineChart(
         LineChartData(
-          minX: (minX - 1).clamp(0, 31).toDouble(),
-          maxX: (maxX + 1).clamp(1, 31).toDouble(),
+          minX: minX - 0.6,
+          maxX: maxX + 0.6,
           minY: minY - 0.5,
           maxY: maxY + 0.5,
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (spot) => Colors.black.withValues(alpha: spot.y.toInt() == 1 ? 1.0 : 0.5),
+            getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+              return touchedBarSpots.map((spot) => LineTooltipItem(
+                  switch (spot.y.toInt()) {
+                    1 => "Horrível",
+                    2 => "Mal",
+                    3 => "Mais ou Menos",
+                    4 => "Bem",
+                    _ => "Ótimo",
+                  },
+                  TextStyle(color: Colors.white),
+                )).toList();
+            }),
+          ),
           lineBarsData: [
             LineChartBarData(
+              showingIndicators: [0],
               spots: flSpots,
               isCurved: true,
               barWidth: 2,
@@ -42,20 +74,35 @@ class MoodLineChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 28,
-                getTitlesWidget: (value, meta) => Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(fontSize: 10),
-                ),
+                getTitlesWidget: (value, meta) {
+                  final emoji = switch (value.toInt()) {
+                    1 => "😞",
+                    2 => "😢",
+                    3 => "😐",
+                    4 => "😊",
+                    5 => "😀",
+                    _ => "",
+                  };
+                  return Text(
+                    emoji,
+                    style: const TextStyle(fontSize: 10),
+                  );
+                },
               ),
             ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 24,
-                getTitlesWidget: (value, meta) => Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(fontSize: 10),
-                ),
+                interval: 1.0,
+                getTitlesWidget: (value, meta) {
+                  final dayDate =
+                      startDateOnly.add(Duration(days: value.round() - 1));
+                  return Text(
+                    dayDate.day.toString(),
+                    style: const TextStyle(fontSize: 10),
+                  );
+                },
               ),
             ),
             topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
