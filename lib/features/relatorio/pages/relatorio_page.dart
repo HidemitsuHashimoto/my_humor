@@ -7,15 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:my_humor/core/routes/app_router.dart';
 import 'package:my_humor/features/home/controllers/home_controller.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../../mood_registration/entities/mood_entry.dart';
 import '../controllers/relatorio_controller.dart';
-import '../utils/save_image_io.dart'
-    if (dart.library.html) '../utils/save_image_stub.dart' as save_image;
+import '../utils/save_to_gallery_io.dart'
+    if (dart.library.html) '../utils/save_to_gallery_stub.dart' as gallery_saver;
 import '../widgets/mood_line_chart.dart';
 import '../widgets/mood_pie_chart.dart';
 
@@ -198,19 +197,23 @@ class _RelatorioPageState extends ConsumerState<RelatorioPage> {
       );
       return;
     }
+    // Wait for the frame to finish painting (avoids debugNeedsPaint when
+    // toImage is called during button press animation).
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
     final boundary =
         _contentKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return;
     final image = await boundary.toImage(pixelRatio: 3.0);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     if (byteData == null || !mounted) return;
-    final dir = await getApplicationDocumentsDirectory();
-    // ignore: unnecessary_brace_in_string_interps
-    final path = '${dir.path}/relatorio_${_year}_${_month}.png';
+    const album = 'Screenshots';
+    final name = 'relatorio_${_year}_$_month';
     try {
-      await save_image.saveImageBytesToPath(
+      await gallery_saver.saveImageBytesToGallery(
         byteData.buffer.asUint8List(),
-        path,
+        album: album,
+        name: name,
       );
     } on UnsupportedError {
       if (!mounted) return;
@@ -220,10 +223,18 @@ class _RelatorioPageState extends ConsumerState<RelatorioPage> {
         ),
       );
       return;
+    } on gallery_saver.GallerySaveException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar: ${e.message}')),
+      );
+      return;
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Imagem salva: $path')),
+      const SnackBar(
+        content: Text('Imagem salva em Screenshots (DCIM).'),
+      ),
     );
   }
 
@@ -252,7 +263,9 @@ class _RelatorioPageState extends ConsumerState<RelatorioPage> {
       appBar: AppBar(title: Text('${_getMonthName(_month)} de $_year')),
       body: RepaintBoundary(
         key: _contentKey,
-        child: Column(
+        child: ColoredBox(
+          color: Colors.white,
+          child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
@@ -326,6 +339,7 @@ class _RelatorioPageState extends ConsumerState<RelatorioPage> {
             //   label: const Text('Limpar dados de exemplo'),
             // ),
           ],
+        ),
         ),
       ),
     );
