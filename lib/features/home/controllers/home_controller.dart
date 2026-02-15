@@ -9,15 +9,13 @@ import 'home_state.dart';
 final moodRepositoryProvider = Provider<MoodRepository>((_) => getIt<MoodRepository>());
 
 final homeControllerProvider =
-    StateNotifierProvider<HomeController, HomeState>((ref) {
-  final repository = ref.watch(moodRepositoryProvider);
-  return HomeController(repository);
-});
+    NotifierProvider<HomeController, HomeState>(HomeController.new);
 
-class HomeController extends StateNotifier<HomeState> {
-  HomeController(this._repository) : super(const HomeState());
+class HomeController extends Notifier<HomeState> {
+  @override
+  HomeState build() => const HomeState();
 
-  final MoodRepository _repository;
+  MoodRepository get _repository => ref.read(moodRepositoryProvider);
 
   void selectMood(MoodLevel mood) {
     state = state.copyWith(selectedMood: mood, saveError: null);

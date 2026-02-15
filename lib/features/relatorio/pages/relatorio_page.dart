@@ -42,19 +42,19 @@ class _RelatorioPageState extends ConsumerState<RelatorioPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkIfHasEntryToday());
   }
 
-  Future<void> _seedSampleData() async {
-    final repository = ref.read(relatorioRepositoryProvider);
-    await repository.seedSampleDataForMonth(_year, _month);
-    if (!mounted) return;
-    ref.invalidate(relatorioControllerProvider((year: _year, month: _month)));
-  }
+  // Future<void> _seedSampleData() async {
+  //   final repository = ref.read(relatorioRepositoryProvider);
+  //   await repository.seedSampleDataForMonth(_year, _month);
+  //   if (!mounted) return;
+  //   ref.invalidate(relatorioControllerProvider((year: _year, month: _month)));
+  // }
 
-  Future<void> _clearSampleData() async {
-    final repository = ref.read(relatorioRepositoryProvider);
-    await repository.clearSampleData();
-    if (!mounted) return;
-    ref.invalidate(relatorioControllerProvider((year: _year, month: _month)));
-  }
+  // Future<void> _clearSampleData() async {
+  //   final repository = ref.read(relatorioRepositoryProvider);
+  //   await repository.clearSampleData();
+  //   if (!mounted) return;
+  //   ref.invalidate(relatorioControllerProvider((year: _year, month: _month)));
+  // }
 
   Future<void> _showFilterDialog() async {
     final now = DateTime.now();

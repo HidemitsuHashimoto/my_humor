@@ -48,7 +48,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    _checkIfHasEntryToday();
     final state = ref.watch(homeControllerProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Como você está hoje?')),

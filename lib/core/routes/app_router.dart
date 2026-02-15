@@ -12,7 +12,6 @@ abstract final class AppRoutes {
 /// Router. Use pushReplacementNamed when navigating so previous route is destroyed (N04).
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    debugPrint('Teste 3 ${settings.name}');
     switch (settings.name) {
       case AppRoutes.home:
         return MaterialPageRoute<void>(
